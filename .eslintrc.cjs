@@ -31,11 +31,11 @@ module.exports = {
       'warn',
       { allowConstantExport: true },
     ],
-    "indent": ["error", 2],
+    "indent": ["error", 2, {"SwitchCase" : 1, "ObjectExpression": 1}],
     "prettier/prettier": "error",
     "linebreak-style": [0, "unix"],
-    "quotes": ["error", "single"],
-    "semi": ["error", "never"],
+    "quotes": ["error", "single", { "avoidEscape": true }],
+    "semi": ["error", "always"],
     "react/react-in-jsx-scope": "off",
     "react/prop-types": 0,
     "import/no-unresolved": [2, { "caseSensitive": false }],
@@ -55,4 +55,19 @@ module.exports = {
       }
     ]
   },
+    ignorePatterns: [
+    '*.cjs',
+    'vite.config.js',
+    'build/',
+    'node_modules/',
+  ],
+  settings: {
+    react: { version: '18.2' },
+    "import/resolver": {
+        'node': {
+            "extensions": [".js", ".jsx", ".ts", ".tsx"],
+            "moduleDirectory": ["node_modules", "src/"]
+        }
+    }
+  }
 }
