@@ -4,7 +4,7 @@ import './index.css';
 import NewTaskForm from 'components/NewTaskForm';
 import Footer from 'components/Footer';
 import TaskList from 'components/TaskList';
-import { subscribe, unsubscribe, startPulse } from 'utils/pulse';
+import { callbacks, unsubscribe, startPulse } from 'utils/pulse';
 
 export default class App extends React.Component {
   constructor() {
@@ -12,19 +12,16 @@ export default class App extends React.Component {
     this.state = {
       todos: [],
       filter: 'All',
-      timer: true,
     };
-    this.ref = React.createRef();
   }
 
   componentDidMount() {
-    this.ref.current = 1;
+    startPulse();
   }
 
   addTodo = (value, minutes, seconds) => {
     const newTodo = {
       id: window.crypto.randomUUID(),
-      subscribed: true,
       task: value,
       minutes,
       seconds,
@@ -75,51 +72,33 @@ export default class App extends React.Component {
   };
 
   clearCompleted = () => {
+    this.state.todos.map((todo) => todo.completed ? unsubscribe(todo.id) : undefined);
     this.setState((state) => ({
       todos: state.todos.filter((todo) => !todo.completed),
     }));
   };
 
-  startTimer = (id) => {
-    const { timer } = this.state;
-    if (!timer) {
-      this.setState({ timer: true });
-      this.ref.current = setInterval(() => {
-        this.setState(prevState => {
-          const itemIdx = prevState.todos.findIndex((todo) => todo.id === id);
-          const oldItem = prevState.todos[itemIdx];
-          let newItem = {
-            ...oldItem, 
-            seconds: oldItem.seconds - 1
+/**
+   * @param {string} id
+   * @returns {void}
+   */
+  tickCallback = () => {
+    const { todos } = this.state;
+    const result = todos.map((todo) => {
+      if (callbacks.has(todo.id)) {
+        if (todo.seconds <= 0) {
+          return {
+            ...todo,
+            minutes: todo.minutes - 1,
+            seconds: 59,
           };
-          if (newItem.seconds < 0) {
-            newItem = {
-             ...newItem,
-             minutes: newItem.minutes - 1,
-             seconds: 59  
-            };
-          }
-          if (newItem.seconds === 0 && newItem.minutes === 0) {
-            clearInterval(this.ref.current);
-            setIsTimerOn(false);
-          }
-          const updatedData = [
-            ...prevState.todos.slice(0, itemIdx),
-            newItem,
-            ...prevState.todos.slice(itemIdx + 1) 
-           ];
-           return {
-            todos: updatedData  
-          }
-        });
-      }, 1000);
-    }
-  };
-
-  pauseTimer = () => {
-    clearInterval(this.ref.current);
-    this.setState({ timer: false });
-  };
+        }
+        return { ...todo, seconds: todo.seconds - 1, };
+      }
+      return todo;
+    });
+    this.setState({todos: result});
+  }
   
   render() {
     const { todos, filter } = this.state;
@@ -132,8 +111,7 @@ export default class App extends React.Component {
             changeCheck={this.changeCheck}
             deleteTodo={this.deleteTodo}
             editTodo={this.editTodo}
-            startTimer={(id) => this.startTimer(id)}
-            pauseTimer={() => this.pauseTimer()}
+            tickCallback={this.tickCallback}
           />
           <Footer
             clearCompleted={this.clearCompleted}

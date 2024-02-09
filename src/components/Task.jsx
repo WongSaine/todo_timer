@@ -2,6 +2,7 @@ import React from 'react';
 import '../index.css';
 import formatDistanceToNow from 'date-fns/formatDistanceToNow';
 import PropTypes from 'prop-types';
+import { subscribe, unsubscribe } from 'utils/pulse';
 
 export default class Task extends React.Component {
   constructor(props) {
@@ -9,9 +10,13 @@ export default class Task extends React.Component {
     this.state = {
       value: props.todo.task,
       isEditing: false,
-      minutes: props.todo.minutes,
-      seconds: props.todo.seconds,
     };
+  }
+
+  onPlayback = () => {
+    const { todo, tickCallback } = this.props;
+    const { id } = todo;//!!!
+    return tickCallback();
   }
 
   submit(event) {
@@ -26,10 +31,11 @@ export default class Task extends React.Component {
   }
 
   render() {
-    const { deleteTodo, todo, changeCheck, startTimer, pauseTimer} = this.props;
+    const { deleteTodo, todo, changeCheck } = this.props;
     // eslint-disable-next-line object-curly-newline
-    const { id, completed, date, task } = todo;
-    const { isEditing, value, seconds, minutes } = this.state;
+    const { id, completed, date, minutes, seconds } = todo;
+    const { isEditing, value } = this.state;
+    // subscribe(id, this.onPlayback);
     /* eslint-disable prettier/prettier */
     return !isEditing ? (
       <li className={(completed && 'completed') || (isEditing && 'editing') || null}>
@@ -44,8 +50,8 @@ export default class Task extends React.Component {
           <label htmlFor={id} className="label">
             <span className="title">{value}</span>
             <span className="description">
-              <button className="icon icon-play" onClick={startTimer} />
-              <button className="icon icon-pause" onClick={pauseTimer} />
+              <button className="icon icon-play" onClick={() => subscribe(id, this.onPlayback)} />
+              <button className="icon icon-pause" onClick={() => unsubscribe(id)} />
               {'\t'}{minutes}:{seconds}
             </span>
             <span className="description">
@@ -63,7 +69,15 @@ export default class Task extends React.Component {
               this.setState(() => ({ isEditing: !isEditing, value: task }));
             }}
           />
-          <button type="button" aria-label="destroy" className="icon icon-destroy" onClick={() => deleteTodo(id)} />
+          <button
+            type="button"
+            aria-label="destroy"
+            className="icon icon-destroy"
+            onClick={() => {
+              unsubscribe(id);
+              deleteTodo(id);
+              }
+            }/>
         </div>
       </li>
     ) : (

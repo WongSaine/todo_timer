@@ -10,8 +10,7 @@ export default function TaskList(props) {
     deleteTodo,
     editTodo,
     changeCheck,
-    startTimer,
-    pauseTimer,
+    tickCallback,
   } = props;
   return (
     <ul className="todo-list">
@@ -23,8 +22,7 @@ export default function TaskList(props) {
           changeCheck={changeCheck}
           deleteTodo={deleteTodo}
           editTodo={editTodo}
-          startTimer={startTimer}
-          pauseTimer={pauseTimer}
+          tickCallback={tickCallback}
         />
         /* eslint-enable prettier/prettier */
       ))}
